@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h1>Find trains</h1>
+  <form method="post" class="search">
+    <label>From
+      <select name="from" required>
+        <option value="" disabled {{ '' if params.get('from') else 'selected' }}>Select station</option>
+        {% for s in stations %}<option value="{{ s.station_id }}" {{ 'selected' if params.get('from')|string == s.station_id|string }}>{{ s.name }} ({{ s.code }})</option>{% endfor %}
+      </select>
+    </label>
+    <label>To
+      <select name="to" required>
+        <option value="" disabled {{ '' if params.get('to') else 'selected' }}>Select station</option>
+        {% for s in stations %}<option value="{{ s.station_id }}" {{ 'selected' if params.get('to')|string == s.station_id|string }}>{{ s.name }} ({{ s.code }})</option>{% endfor %}
+      </select>
+    </label>
+    <label>Date <input type="date" name="date" min="{{ today }}" value="{{ params.get('date', '') }}" required></label>
+    <button class="btn" type="submit">Search</button>
+  </form>
+</section>
+
+{% if results is not none %}
+  <h2>{{ results|length }} train{{ '' if results|length == 1 else 's' }} found</h2>
+  {% for r in results %}
+  <article class="card train">
+    <div class="train-head">
+      <div><strong>{{ r.name }}</strong> <span class="muted">#{{ r.train_no }}</span> <span class="tag">{{ r.train_type }}</span></div>
+      <div class="times">{{ r.departure or '—' }} → {{ r.arrival or '—' }} <span class="muted">· {{ r.km }} km</span></div>
+    </div>
+    <div class="classes">
+      {% for c in r.classes %}
+      <form method="post" action="{{ url_for('book') }}" class="class-box">
+        <input type="hidden" name="train_id" value="{{ r.train_id }}">
+        <input type="hidden" name="class_id" value="{{ c.class_id }}">
+        <input type="hidden" name="from" value="{{ params['from'] }}">
+        <input type="hidden" name="to" value="{{ params['to'] }}">
+        <input type="hidden" name="date" value="{{ params['date'] }}">
+        <div class="cls">{{ c.code }}</div>
+        <div class="fare">₹{{ '%.0f'|format(c.fare) }}</div>
+        <div class="muted">{% if c.available > 0 %}{{ c.available }} seats{% else %}Waitlist{% endif %}</div>
+        <select name="mode"><option>UPI</option><option>CARD</option><option>NETBANKING</option><option>CASH</option></select>
+        <button class="btn small" type="submit">{{ 'Book' if c.available > 0 else 'Join waitlist' }}</button>
+      </form>
+      {% endfor %}
+    </div>
+  </article>
+  {% else %}
+  <p class="muted">No direct trains between these stations.</p>
+  {% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<h1>Admin dashboard</h1>
+<div class="stats">
+  <div class="card stat"><div class="n">{{ stats.confirmed }}</div>Confirmed</div>
+  <div class="card stat"><div class="n">{{ stats.cancelled }}</div>Cancelled</div>
+  <div class="card stat"><div class="n">{{ stats.passengers }}</div>Passengers</div>
+  <div class="card stat"><div class="n">₹{{ '%.2f'|format(stats.revenue) }}</div>Net revenue</div>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Add station</h2>
+    <form method="post" action="{{ url_for('add_station') }}">
+      <label>Code <input name="code" maxlength="6" required></label>
+      <label>Name <input name="name" required></label>
+      <label>City <input name="city" required></label>
+      <button class="btn" type="submit">Add station</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Add train</h2>
+    <form method="post" action="{{ url_for('add_train') }}">
+      <label>Train no. <input name="train_no" required></label>
+      <label>Name <input name="name" required></label>
+      <label>Type
+        <select name="train_type"><option>Rajdhani</option><option>Shatabdi</option><option>Superfast</option><option>Express</option></select>
+      </label>
+      <button class="btn" type="submit">Add train</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Add route stop</h2>
+    <form method="post" action="{{ url_for('add_route_stop') }}">
+      <label>Train
+        <select name="train_id" required>{% for t in trains %}<option value="{{ t.train_id }}">{{ t.train_no }} · {{ t.name }}</option>{% endfor %}</select>
+      </label>
+      <label>Station
+        <select name="station_id" required>{% for s in stations %}<option value="{{ s.station_id }}">{{ s.name }} ({{ s.code }})</option>{% endfor %}</select>
+      </label>
+      <div class="row">
+        <label>Stop order <input type="number" name="stop_order" min="1" required></label>
+        <label>Distance (km) <input type="number" name="distance_km" min="0" required></label>
+      </div>
+      <div class="row">
+        <label>Arrival <input type="time" name="arrival"></label>
+        <label>Departure <input type="time" name="departure"></label>
+      </div>
+      <button class="btn" type="submit">Add stop</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Add class to train</h2>
+    <form method="post" action="{{ url_for('add_train_class') }}">
+      <label>Train
+        <select name="train_id" required>{% for t in trains %}<option value="{{ t.train_id }}">{{ t.train_no }} · {{ t.name }}</option>{% endfor %}</select>
+      </label>
+      <label>Class
+        <select name="class_id" required>{% for c in all_classes %}<option value="{{ c.class_id }}">{{ c.code }} – {{ c.description }}</option>{% endfor %}</select>
+      </label>
+      <label>Total seats <input type="number" name="total_seats" min="1" required></label>
+      <button class="btn" type="submit">Add class</button>
+    </form>
+  </section>
+</div>
+
+<h2>Recent bookings</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>PNR</th><th>Passenger</th><th>Train</th><th>Class</th><th>Route</th><th>Date</th><th>Fare</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for b in bookings %}
+  <tr><td>{{ b.pnr }}</td><td>{{ b.passenger }}</td><td>{{ b.train_no }} {{ b.train }}</td><td>{{ b['class'] }}</td>
+      <td>{{ b.from_stn }} → {{ b.to_stn }}</td><td>{{ b.journey_date }}</td><td>₹{{ '%.2f'|format(b.fare) }}</td>
+      <td><span class="status {{ b.status|lower }}">{{ b.status }}</span></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<details class="card">
+  <summary>{{ stations|length }} stations · {{ trains|length }} trains</summary>
+  <p class="muted">Stations: {% for s in stations %}{{ s.code }}{{ ', ' if not loop.last }}{% endfor %}</p>
+</details>
+{% endblock %}

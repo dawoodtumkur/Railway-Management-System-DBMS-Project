@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}My bookings{% endblock %}
+{% block content %}
+<h1>My bookings</h1>
+{% if bookings %}
+<div class="table-wrap">
+<table>
+  <thead><tr><th>PNR</th><th>Train</th><th>Class</th><th>Route</th><th>Date</th><th>Fare</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for b in bookings %}
+  <tr>
+    <td>{{ b.pnr }}</td>
+    <td>{{ b.train }} <span class="muted">#{{ b.train_no }}</span></td>
+    <td>{{ b['class'] }}</td>
+    <td>{{ b.from_stn }} → {{ b.to_stn }}</td>
+    <td>{{ b.journey_date }}</td>
+    <td>₹{{ '%.2f'|format(b.fare) }}</td>
+    <td><span class="status {{ b.status|lower }}">{{ b.status }}</span></td>
+    <td>
+      {% if b.status != 'CANCELLED' %}
+      <form method="post" action="{{ url_for('cancel', pnr=b.pnr) }}" onsubmit="return confirm('Cancel this ticket? 80% refund applies.')">
+        <button class="btn small danger" type="submit">Cancel</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No bookings yet. <a href="{{ url_for('index') }}">Search trains</a></p>
+{% endif %}
+{% endblock %}
